@@ -1,40 +1,74 @@
 using System.Collections;
 using UnityEngine;
 
-public class DoorOpening : MonoBehaviour
+public class DoorOpening : MonoBehaviour, IInteractable
 {
     public bool isOpen;
     [SerializeField] private float speed = 1f;
 
     [Header("Door Type Configs")]
     [SerializeField] private bool isRotatingDoor = true;  // Set to true for rotating door, false for sliding
-    
+
     [Header("Sliding Configs")]
     [SerializeField] private Vector3 slideDirection = Vector3.right;
     [SerializeField] private float slideAmount = 3f;
 
     [Header("Rotation Configs")]
     [SerializeField] private float rotationAmount = 90f;  // Rotation amount in degrees
-    [SerializeField] private float forwardDirection = 0f; // Forward direction threshold for rotation
+
+    [Header("Key Requirements")]
+    public Key requiredKey; // Reference to the key required to open this door
 
     private Vector3 _startPosition;
     private Vector3 _endPosition;
     private Vector3 _startRotation;
-    private Vector3 _forward;
     private Coroutine _animationCoroutine;
+    private bool isInteractable = true; // Prevent interaction during animation
 
     private void Awake()
     {
         _startPosition = transform.position;
         _endPosition = _startPosition + slideAmount * slideDirection;
         _startRotation = transform.rotation.eulerAngles;
-        _forward = transform.right; // Assuming "right" is the forward-facing direction
     }
 
-    public void Open(Vector3 userPosition)
+    public void Interact()
+    {
+        if (!isInteractable) return;
+
+        if (isOpen)
+        {
+            Close(); // Close the door if it's already open
+        }
+        else
+        {
+            if (requiredKey != null && !PlayerInventory.Instance.HasKey(requiredKey))
+            {
+                Debug.Log($"You need the {requiredKey.keyName} to open this door.");
+                return;
+            }
+
+            Open();
+        }
+    }
+
+    public string GetHintText()
+    {
+        if (isOpen)
+            return "Press E to close the door";
+        else if (requiredKey != null && !PlayerInventory.Instance.HasKey(requiredKey))
+            return $"You need the {requiredKey.keyName} to open this door";
+        else
+            return "Press E to open the door";
+    }
+
+    public void Open()
     {
         if (isOpen) return;
-        AudioManager.instance.PlaySound(AudioManager.instance.doorOpenSound);
+        isOpen = true;
+        isInteractable = false; // Prevent interaction during animation
+
+        AudioManager.instance?.PlaySound(AudioManager.instance.doorOpenSound);
 
         if (_animationCoroutine != null)
         {
@@ -43,13 +77,10 @@ public class DoorOpening : MonoBehaviour
 
         if (isRotatingDoor)
         {
-            // Handle rotation based on user's position
-            float dot = Vector3.Dot(_forward, (userPosition - transform.position).normalized);
-            _animationCoroutine = StartCoroutine(RotateDoorOpen(dot));
+            _animationCoroutine = StartCoroutine(RotateDoor(true));
         }
         else
         {
-            // Handle sliding door
             _animationCoroutine = StartCoroutine(SlideDoor(_endPosition));
         }
     }
@@ -57,6 +88,8 @@ public class DoorOpening : MonoBehaviour
     public void Close()
     {
         if (!isOpen) return;
+        isOpen = false;
+        isInteractable = false; // Prevent interaction during animation
 
         if (_animationCoroutine != null)
         {
@@ -65,7 +98,7 @@ public class DoorOpening : MonoBehaviour
 
         if (isRotatingDoor)
         {
-            _animationCoroutine = StartCoroutine(RotateDoorClose());
+            _animationCoroutine = StartCoroutine(RotateDoor(false));
         }
         else
         {
@@ -76,10 +109,8 @@ public class DoorOpening : MonoBehaviour
     private IEnumerator SlideDoor(Vector3 targetPosition)
     {
         Vector3 startPosition = transform.position;
-        float distance = Vector3.Distance(startPosition, targetPosition);
-        float duration = distance / speed;
+        float duration = Vector3.Distance(startPosition, targetPosition) / speed;
         float elapsedTime = 0f;
-        isOpen = targetPosition == _endPosition;
 
         while (elapsedTime < duration)
         {
@@ -89,52 +120,25 @@ public class DoorOpening : MonoBehaviour
         }
 
         transform.position = targetPosition;
-        _animationCoroutine = null;
+        isInteractable = true; // Allow interaction again
     }
 
-    private IEnumerator RotateDoorOpen(float forwardAmount)
+    private IEnumerator RotateDoor(bool opening)
     {
         Quaternion startRotation = transform.rotation;
-        Quaternion endRotation;
+        Quaternion endRotation = opening
+            ? Quaternion.Euler(new Vector3(0, _startRotation.y + rotationAmount, 0))
+            : Quaternion.Euler(_startRotation);
 
-        // Rotate the door based on the user's position relative to the door's forward direction
-        if (forwardAmount >= forwardDirection)
+        float elapsedTime = 0f;
+        while (elapsedTime < 1f)
         {
-            endRotation = Quaternion.Euler(new Vector3(0, _startRotation.y + rotationAmount, 0));
-        }
-        else
-        {
-            endRotation = Quaternion.Euler(new Vector3(0, _startRotation.y - rotationAmount, 0));
-        }
-
-        isOpen = true;
-
-        float time = 0;
-        while (time < 1)
-        {
-            transform.rotation = Quaternion.Slerp(startRotation, endRotation, time);
-            time += Time.deltaTime * speed;
+            transform.rotation = Quaternion.Slerp(startRotation, endRotation, elapsedTime);
+            elapsedTime += Time.deltaTime * speed;
             yield return null;
         }
 
         transform.rotation = endRotation;
-    }
-
-    private IEnumerator RotateDoorClose()
-    {
-        Quaternion startRotation = transform.rotation;
-        Quaternion endRotation = Quaternion.Euler(_startRotation);
-
-        isOpen = false;
-
-        float time = 0;
-        while (time < 1)
-        {
-            transform.rotation = Quaternion.Slerp(startRotation, endRotation, time);
-            time += Time.deltaTime * speed;
-            yield return null;
-        }
-
-        transform.rotation = endRotation;
+        isInteractable = true; // Allow interaction again
     }
 }

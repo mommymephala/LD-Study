@@ -3,20 +3,15 @@ using UnityEngine;
 public class FireballShooter : MonoBehaviour
 {
     [Header("Fireball Settings")]
-    public GameObject fireballPrefab; // The fireball prefab
-    public Transform firePoint; // The point where fireballs are spawned
-    public float fireRate = 1f; // Time between shots
-    public float fireballLifetime = 5f; // Fireball lifetime
-
-    [Header("Audio")]
-    public AudioSource fireSound; // Optional: Add a sound effect for firing
-
-    private float nextFireTime; // Tracks when the player can fire again
+    public GameObject fireballPrefab;
+    public Transform firePoint;
+    public float fireRate = 1f;
+    public float fireballLifetime = 5f;
+    private float nextFireTime;
 
     void Update()
     {
-        // Check if the player presses the Fire1 button and if enough time has passed since the last fire
-        if (Input.GetButtonDown("Fire1") && Time.time >= nextFireTime)
+        if (Input.GetKeyDown(KeyCode.Mouse0) && Time.time >= nextFireTime)
         {
             ShootFireball();
         }
@@ -24,10 +19,7 @@ public class FireballShooter : MonoBehaviour
 
     void ShootFireball()
     {
-        // Set the next available fire time
         nextFireTime = Time.time + 1f / fireRate;
-
-        // Spawn the fireball at the firePoint position and rotation
         GameObject fireball = Instantiate(fireballPrefab, firePoint.position, firePoint.rotation);
 
         // Set the fireball's forward velocity (using the particle system for visual speed)
@@ -39,13 +31,8 @@ public class FireballShooter : MonoBehaviour
             mainModule.startLifetime = fireballLifetime;
         }
 
-        // Play fire sound if assigned
-        if (fireSound != null)
-        {
-            fireSound.Play();
-        }
+        AudioManager.instance.PlaySound(AudioManager.instance.fireSound);
 
-        // Destroy the fireball after its lifetime expires
         Destroy(fireball, fireballLifetime);
     }
 }

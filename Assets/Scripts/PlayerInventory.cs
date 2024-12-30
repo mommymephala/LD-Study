@@ -8,6 +8,7 @@ public class PlayerInventory : MonoBehaviour
     private int lockpickCount = 0;
     private List<string> treasures = new List<string>();
     private List<GameObject> weapons = new List<GameObject>();
+    private List<Key> keys = new List<Key>();
 
     void Awake()
     {
@@ -52,6 +53,33 @@ public class PlayerInventory : MonoBehaviour
     {
         weapons.Add(weapon);
         Debug.Log($"Weapon added: {weapon.name}");
+    }
+
+    public void AddKey(Key key)
+    {
+        if (!keys.Contains(key))
+        {
+            keys.Add(key);
+            Debug.Log($"Key added: {key.keyName}");
+        }
+        else
+        {
+            Debug.Log("Key already in inventory.");
+        }
+    }
+
+    public bool HasKey(Key key)
+    {
+        return keys.Contains(key);
+    }
+
+    public void RemoveKey(Key key)
+    {
+        if (keys.Contains(key))
+        {
+            keys.Remove(key);
+            Debug.Log($"Key removed: {key.keyName}");
+        }
     }
 
     public int GetLockpickCount()

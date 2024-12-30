@@ -1,6 +1,5 @@
 using ECM.Components;
 using ECM.Controllers;
-using TMPro;
 using UnityEngine;
 
 public class LockpickingSystem : MonoBehaviour, IInteractable
@@ -29,6 +28,7 @@ public class LockpickingSystem : MonoBehaviour, IInteractable
     private MonoBehaviour playerLook;
     private MonoBehaviour playerMovement;
     private PlayerInteraction playerInteraction;
+    private FireballShooter fireballShooter;
 
     void Start()
     {
@@ -36,6 +36,7 @@ public class LockpickingSystem : MonoBehaviour, IInteractable
         playerLook = playerInventory.GetComponent<MouseLook>();
         playerMovement = playerInventory.GetComponent<BaseFirstPersonController>();
         playerInteraction = playerInventory.GetComponent<PlayerInteraction>();
+        fireballShooter = playerInventory.GetComponentInChildren<FireballShooter>();
 
         GenerateSweetSpot();
     }
@@ -46,7 +47,7 @@ public class LockpickingSystem : MonoBehaviour, IInteractable
         {
             if (Input.GetKeyDown(KeyCode.Escape))
             {
-                StopLockpicking(); // Exit the lockpicking minigame when ESC is pressed
+                StopLockpicking();
                 return;
             }
 
@@ -223,6 +224,7 @@ public class LockpickingSystem : MonoBehaviour, IInteractable
 
             playerLook.enabled = false;
             playerMovement.enabled = false;
+            fireballShooter.enabled = false;
             playerInteraction.enabled = false;
             playerInteraction.hintText.gameObject.SetActive(false);
         }
@@ -242,6 +244,7 @@ public class LockpickingSystem : MonoBehaviour, IInteractable
         // Unfreeze player controls
         playerLook.enabled = true;
         playerMovement.enabled = true;
+        fireballShooter.enabled = true;
         playerInteraction.enabled = true;
         playerInteraction.hintText.gameObject.SetActive(true);
 

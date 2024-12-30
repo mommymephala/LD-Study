@@ -15,10 +15,8 @@ public class Fireball : MonoBehaviour
 
     void OnParticleCollision(GameObject other)
     {
-        // Handle what happens when the fireball hits another object
         Debug.Log($"Fireball hit: {other.name}");
 
-        // Example: Apply damage if the target has a health component
         var health = other.GetComponent<Health>();
         if (health != null)
         {

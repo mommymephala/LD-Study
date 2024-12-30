@@ -7,8 +7,9 @@ public class AudioManager : MonoBehaviour
     private AudioSource audioSource;
 
     public AudioClip[] lockpickSounds;
-    public AudioClip phasePassedSound;
     public AudioClip chestUnlockSound;
+    public AudioClip puzzleSolvedSound;
+    public AudioClip fireSound;
     public AudioClip[] pickupSounds;
     public AudioClip errorSound;
     public AudioClip doorOpenSound;

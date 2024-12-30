@@ -8,13 +8,11 @@ public class DoorTrigger : MonoBehaviour
     {
         if (!other.CompareTag("Player")) return;
 
-        Vector3 playerPosition = other.transform.position;
-
         foreach (DoorOpening doorOpening in doorOpenings)
         {
             if (!doorOpening.isOpen)
             {
-                doorOpening.Open(playerPosition);
+                doorOpening.Open();
             }
         }
     }
